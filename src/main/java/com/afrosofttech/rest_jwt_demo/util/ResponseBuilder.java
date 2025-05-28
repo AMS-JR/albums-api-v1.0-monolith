@@ -47,4 +47,7 @@ public class ResponseBuilder {
     public static <T> ResponseEntity<ApiResponse<T>> internalError(String message, String code, List<String> details) {
         return ResponseBuilder.error(message, code, details, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    public static <T> ResponseEntity<ApiResponse<T>> unsupportedMediaType(String message, String code, List<String> details) {
+        return ResponseBuilder.error(message, code, details, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    }
 }
