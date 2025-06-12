@@ -1,23 +1,23 @@
 package com.afrosofttech.rest_jwt_demo.service;
 
-import com.afrosofttech.rest_jwt_demo.dto.album.request.AlbumDto;
-import com.afrosofttech.rest_jwt_demo.dto.album.response.AlbumPayload;
-import com.afrosofttech.rest_jwt_demo.dto.photo.request.PhotoDto;
-import com.afrosofttech.rest_jwt_demo.dto.photo.response.PhotoPayload;
+import com.afrosofttech.rest_jwt_demo.dto.album.request.AlbumRequestDto;
+import com.afrosofttech.rest_jwt_demo.dto.album.response.AlbumResponseDto;
+import com.afrosofttech.rest_jwt_demo.dto.photo.request.PhotoRequestDto;
+import com.afrosofttech.rest_jwt_demo.dto.photo.response.PhotoResponseDto;
 import com.afrosofttech.rest_jwt_demo.entity.Account;
 import com.afrosofttech.rest_jwt_demo.entity.Album;
 import com.afrosofttech.rest_jwt_demo.entity.Photo;
 import com.afrosofttech.rest_jwt_demo.exception.ResourceNotFoundException;
 import com.afrosofttech.rest_jwt_demo.exception.UnauthorizedAccessException;
+import com.afrosofttech.rest_jwt_demo.mapper.album.AlbumMapper;
+import com.afrosofttech.rest_jwt_demo.mapper.photo.PhotoMapper;
 import com.afrosofttech.rest_jwt_demo.repository.AccountRepository;
 import com.afrosofttech.rest_jwt_demo.repository.AlbumRepository;
 import com.afrosofttech.rest_jwt_demo.repository.PhotoRepository;
 import com.afrosofttech.rest_jwt_demo.util.AppUtil;
 import com.afrosofttech.rest_jwt_demo.util.constants.FileType;
 import com.afrosofttech.rest_jwt_demo.util.constants.exceptions.ErrorMessage;
-import com.nimbusds.jose.proc.SecurityContext;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -36,42 +36,31 @@ public class AlbumService {
     private final PhotoRepository photoRepository;
 
     @Autowired
-    public AlbumService(AlbumRepository albumRepository, AccountRepository accountRepository, PhotoRepository photoRepository) {
+    public AlbumService(AlbumRepository albumRepository,
+                        AccountRepository accountRepository,
+                        PhotoRepository photoRepository) {
         this.albumRepository = albumRepository;
         this.accountRepository = accountRepository;
         this.photoRepository = photoRepository;
     }
-    public List<AlbumPayload> index(){
+    public List<AlbumResponseDto> index(){
         Long accountId = this.getCurrentLoggedInUser();
-        List<AlbumPayload> albums = new ArrayList<>();
+        List<AlbumResponseDto> albums = new ArrayList<>();
 
         this.findAllByAccountId(accountId).forEach(album -> {
 
-            List<PhotoPayload> photos = new ArrayList<>();
+            List<PhotoResponseDto> photos = new ArrayList<>();
             for(Photo photo : photoRepository.findByAlbumId(album.getId())){
                 String link = "/albums/"+album.getId()+"/photos/"+photo.getId()+"/download";
-                photos.add(
-                        PhotoPayload.builder()
-                                .id(photo.getId())
-                                .name(photo.getName())
-                                .description(photo.getDescription())
-                                .fileName(photo.getFileName())
-                                .downloadLink(link)
-                                .build()
-                );
+                photos.add(PhotoMapper.toDto(photo, link));
             }
-            AlbumPayload albumPayload = AlbumPayload.builder()
-                    .id(album.getId())
-                    .name(album.getName())
-                    .description(album.getDescription())
-                    .photos(photos)
-                    .build();
+            AlbumResponseDto albumResponseDto = AlbumMapper.toDto(album, photos);
 
-            albums.add(albumPayload);
+            albums.add(albumResponseDto);
         });
         return albums;
     }
-    public AlbumPayload getAlbumById(Long albumId){
+    public AlbumResponseDto getAlbumById(Long albumId){
         Long accountId = this.getCurrentLoggedInUser();
 
         Album album = albumRepository.findById(albumId)
@@ -81,11 +70,11 @@ public class AlbumService {
             throw new UnauthorizedAccessException(ErrorMessage.UNAUTHORIZED_ALBUM_ACCESS.format(albumId));
         }
 
-        List<PhotoPayload> photos = new ArrayList<>();
+        List<PhotoResponseDto> photos = new ArrayList<>();
         for (Photo photo : photoRepository.findByAlbumId(albumId)) {
             String link = "/albums/" + album.getId() + "/photos/" + photo.getId() + "/download";
             photos.add(
-                    PhotoPayload.builder()
+                    PhotoResponseDto.builder()
                             .id(photo.getId())
                             .name(photo.getName())
                             .description(photo.getDescription())
@@ -95,17 +84,17 @@ public class AlbumService {
             );
         }
 
-        return AlbumPayload.builder()
+        return AlbumResponseDto.builder()
                 .id(album.getId())
                 .name(album.getName())
                 .description(album.getDescription())
                 .photos(photos)
                 .build();
     }
-    public AlbumPayload create(AlbumDto albumDto, String email) throws ResourceNotFoundException {
+    public AlbumResponseDto create(AlbumRequestDto albumRequestDto, String email) throws ResourceNotFoundException {
         Album album = new Album();
-        album.setName(albumDto.getName());
-        album.setDescription(albumDto.getDescription());
+        album.setName(albumRequestDto.getName());
+        album.setDescription(albumRequestDto.getDescription());
 
         Account account = accountRepository.findByEmail(email)
                      .orElseThrow(() -> new ResourceNotFoundException("Failed to add album." +
@@ -115,13 +104,13 @@ public class AlbumService {
 
         Album savedAlbum = albumRepository.save(album);
 
-        return new AlbumPayload(savedAlbum.getId(), savedAlbum.getName(), savedAlbum.getDescription(), null);
+        return new AlbumResponseDto(savedAlbum.getId(), savedAlbum.getName(), savedAlbum.getDescription(), null);
     }
 
-    public AlbumPayload read(){
+    public AlbumResponseDto read(){
         return null;
     }
-    public AlbumPayload updateAlbum(Long albumId, AlbumDto albumDto){
+    public AlbumResponseDto updateAlbum(Long albumId, AlbumRequestDto albumRequestDto){
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Album not found"));
 
@@ -132,19 +121,19 @@ public class AlbumService {
         }
 
         // Update album details
-        album.setName(albumDto.getName());
-        album.setDescription(albumDto.getDescription());
+        album.setName(albumRequestDto.getName());
+        album.setDescription(albumRequestDto.getDescription());
 
         // Save the updated album
         albumRepository.save(album);
 
         // Convert to AlbumPayload
-        AlbumPayload albumPayload = AlbumPayload.builder()
+        AlbumResponseDto albumResponseDto = AlbumResponseDto.builder()
                 .id(album.getId())
                 .name(album.getName())
                 .description(album.getDescription())
                 .photos(album.getPhotos().stream()
-                        .map(photo -> PhotoPayload.builder()
+                        .map(photo -> PhotoResponseDto.builder()
                                 .id(photo.getId())
                                 .name(photo.getName())
                                 .description(photo.getDescription())
@@ -154,7 +143,7 @@ public class AlbumService {
                         .collect(Collectors.toList()))
                 .build();
 
-        return albumPayload;
+        return albumResponseDto;
     }
     public Map<String,String> deleteAlbum(Long albumId){
         Long accountId = this.getCurrentLoggedInUser();

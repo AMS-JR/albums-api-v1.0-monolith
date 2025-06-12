@@ -1,9 +1,8 @@
 package com.afrosofttech.rest_jwt_demo.controller;
 
-import com.afrosofttech.rest_jwt_demo.dto.album.request.AlbumDto;
-import com.afrosofttech.rest_jwt_demo.dto.album.response.AlbumPayload;
-import com.afrosofttech.rest_jwt_demo.dto.photo.request.PhotoDto;
-import com.afrosofttech.rest_jwt_demo.dto.photo.response.PhotoPayload;
+import com.afrosofttech.rest_jwt_demo.dto.album.request.AlbumRequestDto;
+import com.afrosofttech.rest_jwt_demo.dto.album.response.AlbumResponseDto;
+import com.afrosofttech.rest_jwt_demo.dto.photo.request.PhotoRequestDto;
 import com.afrosofttech.rest_jwt_demo.exception.ResourceNotFoundException;
 import com.afrosofttech.rest_jwt_demo.service.AlbumService;
 import com.afrosofttech.rest_jwt_demo.service.PhotoService;
@@ -19,7 +18,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,24 +42,24 @@ public class AlbumController {
     @GetMapping(value = "/", produces ="application/json")
 //    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
     @Operation(summary = "Show albums")
-    public ResponseEntity<List<AlbumPayload>> getAllAlbums() {
-        List<AlbumPayload> albums = albumService.index();
+    public ResponseEntity<List<AlbumResponseDto>> getAllAlbums() {
+        List<AlbumResponseDto> albums = albumService.index();
         return ResponseEntity.ok(albums);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Show an Album")
-    public ResponseEntity<AlbumPayload> getAlbumById(@PathVariable Long id) {
-        AlbumPayload albumPayload = albumService.getAlbumById(id);
-        return ResponseEntity.ok(albumPayload);
+    public ResponseEntity<AlbumResponseDto> getAlbumById(@PathVariable Long id) {
+        AlbumResponseDto albumResponseDto = albumService.getAlbumById(id);
+        return ResponseEntity.ok(albumResponseDto);
     }
     @PostMapping(value= "/add", consumes = "application/json", produces = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create an Album")
-    public ResponseEntity<AlbumPayload> CreateAlbum(@Valid @RequestBody AlbumDto albumDto, Authentication authentication) {
+    public ResponseEntity<AlbumResponseDto> CreateAlbum(@Valid @RequestBody AlbumRequestDto albumRequestDto, Authentication authentication) {
         try {
-            AlbumPayload albumPayload = albumService.create(albumDto, authentication.getName());
-            return new ResponseEntity<>(albumPayload, HttpStatus.CREATED);
+            AlbumResponseDto albumResponseDto = albumService.create(albumRequestDto, authentication.getName());
+            return new ResponseEntity<>(albumResponseDto, HttpStatus.CREATED);
         } catch (ResourceNotFoundException ex) {
             log.debug(AlbumError.ALBUM_ADD_ERROR.name(), ex.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -69,8 +67,8 @@ public class AlbumController {
     }
 @PutMapping("/{id}")
 @Operation(summary = "Update an Album")
-public ResponseEntity<AlbumPayload> updateAlbum(@PathVariable Long id, @RequestBody AlbumDto albumDto) {
-    AlbumPayload updatedAlbum = albumService.updateAlbum(id, albumDto);
+public ResponseEntity<AlbumResponseDto> updateAlbum(@PathVariable Long id, @RequestBody AlbumRequestDto albumRequestDto) {
+    AlbumResponseDto updatedAlbum = albumService.updateAlbum(id, albumRequestDto);
     return ResponseEntity.status(HttpStatus.NO_CONTENT).body(updatedAlbum);
 }
 @DeleteMapping("/{id}")
@@ -101,8 +99,8 @@ public ResponseEntity<Map<String, List<String>>> createPhotos(@PathVariable Long
 public ResponseEntity<Map<String, String>> updatePhoto(
         @PathVariable Long id,
         @PathVariable Long photoId,
-        @RequestBody PhotoDto photoDto) {
-    Map<String, String> response = photoService.updatePhoto(id, photoId, photoDto);
+        @RequestBody PhotoRequestDto photoRequestDto) {
+    Map<String, String> response = photoService.updatePhoto(id, photoId, photoRequestDto);
     return ResponseEntity.ok(response);
 }
 @GetMapping("/{albumId}/photos/{photoId}/download")

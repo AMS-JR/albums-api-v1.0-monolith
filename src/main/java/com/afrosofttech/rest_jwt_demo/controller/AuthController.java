@@ -1,9 +1,9 @@
 package com.afrosofttech.rest_jwt_demo.controller;
 
-import com.afrosofttech.rest_jwt_demo.dto.auth.request.AccountDto;
+import com.afrosofttech.rest_jwt_demo.dto.auth.request.AccountRequestDto;
 import com.afrosofttech.rest_jwt_demo.dto.auth.request.AuthorityDto;
 import com.afrosofttech.rest_jwt_demo.dto.auth.request.PasswordDto;
-import com.afrosofttech.rest_jwt_demo.dto.auth.response.AccountPayload;
+import com.afrosofttech.rest_jwt_demo.dto.auth.response.AccountResponseDto;
 import com.afrosofttech.rest_jwt_demo.dto.auth.response.ProfilePayload;
 import com.afrosofttech.rest_jwt_demo.dto.auth.response.TokenPayload;
 import com.afrosofttech.rest_jwt_demo.dto.auth.request.UserLoginDto;
@@ -60,9 +60,9 @@ public class AuthController {
     @PostMapping(value= "/users/add", consumes = "application/json", produces = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Add a new User")
-    public ResponseEntity<String> addUser(@Valid @RequestBody AccountDto accountDto) {
+    public ResponseEntity<String> addUser(@Valid @RequestBody AccountRequestDto accountRequestDto) {
         try {
-            accountService.create(accountDto);
+            accountService.create(accountRequestDto);
             return ResponseEntity.ok(AccountSuccess.ACCOUNT_ADDED.toString());
         } catch (Exception e) {
             log.debug(AccountError.ADD_ACCOUNT_ERROR.toString(), e.getMessage());
@@ -72,14 +72,14 @@ public class AuthController {
     @GetMapping(value= "/users", produces = "application/json")
     @Operation(summary = "List user api")
     @SecurityRequirement(name = "afrosofttech-demo-api")
-    public List<AccountPayload> findUsers() {
+    public List<AccountResponseDto> findUsers() {
         return accountService.findAll();
     }
     @PutMapping(value= "/user/{userId}/authorities/update",
             produces = "application/json", consumes = "application/json")
     @Operation(summary = "Update authorities")
     @SecurityRequirement(name = "afrosofttech-demo-api")
-    public ResponseEntity<AccountPayload> updateAuthorities(@Valid @RequestBody AuthorityDto authorityDto,@PathVariable Long userId) {
+    public ResponseEntity<AccountResponseDto> updateAuthorities(@Valid @RequestBody AuthorityDto authorityDto, @PathVariable Long userId) {
         return ResponseEntity.status(HttpStatus.OK).body((accountService.updateAuthorities(authorityDto.getAuthorities(), userId)));
     }
     @GetMapping(value= "/profile", produces = "application/json")
@@ -93,7 +93,7 @@ public class AuthController {
     @Operation(summary = "Update password")
     @SecurityRequirement(name = "afrosofttech-demo-api")
     @ResponseStatus(HttpStatus.OK)
-    public AccountPayload updatePassword(@Valid @RequestBody PasswordDto passwordDto, Authentication authentication) {
+    public AccountResponseDto updatePassword(@Valid @RequestBody PasswordDto passwordDto, Authentication authentication) {
         return accountService.updatePassword(authentication.getName(), passwordDto.getPassword());
     }
     @DeleteMapping(value= "/user/{userId}/delete",

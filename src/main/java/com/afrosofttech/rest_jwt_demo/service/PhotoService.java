@@ -1,6 +1,6 @@
 package com.afrosofttech.rest_jwt_demo.service;
 
-import com.afrosofttech.rest_jwt_demo.dto.photo.request.PhotoDto;
+import com.afrosofttech.rest_jwt_demo.dto.photo.request.PhotoRequestDto;
 import com.afrosofttech.rest_jwt_demo.entity.Account;
 import com.afrosofttech.rest_jwt_demo.entity.Album;
 import com.afrosofttech.rest_jwt_demo.entity.Photo;
@@ -148,7 +148,7 @@ public class PhotoService {
                 contentType.equals("image/png") ||
                 contentType.equals("image/gif");
     }
-    public Map<String, String> updatePhoto(Long albumId, Long photoId, PhotoDto photoDto) {
+    public Map<String, String> updatePhoto(Long albumId, Long photoId, PhotoRequestDto photoRequestDto) {
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.RESOURCE_NOT_FOUND.format(albumId)));
 
@@ -159,8 +159,8 @@ public class PhotoService {
             throw new BadRequestException(ErrorMessage.BAD_REQUEST.format());
         }
 
-        photo.setName(photoDto.getName());
-        photo.setDescription(photoDto.getDescription());
+        photo.setName(photoRequestDto.getName());
+        photo.setDescription(photoRequestDto.getDescription());
         photoRepository.save(photo);
 
         Map<String, String> response = new HashMap<>();

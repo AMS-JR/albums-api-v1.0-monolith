@@ -1,8 +1,7 @@
 package com.afrosofttech.rest_jwt_demo.service;
 
-import com.afrosofttech.rest_jwt_demo.dto.auth.request.AccountDto;
-import com.afrosofttech.rest_jwt_demo.dto.auth.request.AuthorityDto;
-import com.afrosofttech.rest_jwt_demo.dto.auth.response.AccountPayload;
+import com.afrosofttech.rest_jwt_demo.dto.auth.request.AccountRequestDto;
+import com.afrosofttech.rest_jwt_demo.dto.auth.response.AccountResponseDto;
 import com.afrosofttech.rest_jwt_demo.dto.auth.response.ProfilePayload;
 import com.afrosofttech.rest_jwt_demo.entity.Account;
 import com.afrosofttech.rest_jwt_demo.exception.ResourceNotFoundException;
@@ -40,9 +39,9 @@ public class AccountService implements UserDetailsService {
         return accountRepository.save(account);
     }
 
-    public List<AccountPayload> findAll(){
+    public List<AccountResponseDto> findAll(){
         return accountRepository.findAll().stream()
-                .map(account -> new AccountPayload(
+                .map(account -> new AccountResponseDto(
                         account.getId(),
                         account.getEmail(),
                         account.getAuthorities()
@@ -50,7 +49,7 @@ public class AccountService implements UserDetailsService {
                 .collect(Collectors.toList());
     }
 
-    public void create(AccountDto dto) {
+    public void create(AccountRequestDto dto) {
         Account account = new Account();
         account.setEmail(dto.getEmail());
         account.setPassword(passwordEncoder.encode(dto.getPassword()));
@@ -66,27 +65,27 @@ public class AccountService implements UserDetailsService {
                 .authorities(account.getAuthorities())
                 .build();
     }
-    public AccountPayload updatePassword(String email, String newPassword) {
+    public AccountResponseDto updatePassword(String email, String newPassword) {
         Account account = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found for email: " + email));
 
         account.setPassword(newPassword); // ideally encode this
         this.save(account);
 
-        return AccountPayload.builder()
+        return AccountResponseDto.builder()
                 .id(account.getId())
                 .email(account.getEmail())
                 .authorities(account.getAuthorities())
                 .build();
     }
-    public AccountPayload updateAuthorities(String newAuthorities, Long id) {
+    public AccountResponseDto updateAuthorities(String newAuthorities, Long id) {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found for id: " + id));
 
         account.setAuthorities(newAuthorities);
         this.save(account);
 
-        return AccountPayload.builder()
+        return AccountResponseDto.builder()
                 .id(account.getId())
                 .email(account.getEmail())
                 .authorities(account.getAuthorities())
