@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AccountDto {
+public class AccountRequestDto {
     @Email
     @Schema(description = "Email address", example = "amadou.asj.jallow@gmail.com",
     requiredMode = Schema.RequiredMode.REQUIRED)

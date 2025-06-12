@@ -7,7 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PhotoDto {
+public class PhotoRequestDto {
     private String name;
     private String description;
 }

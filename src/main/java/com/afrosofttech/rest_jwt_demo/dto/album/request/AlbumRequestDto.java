@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AlbumDto {
+public class AlbumRequestDto {
     @NotBlank
     @Schema(description = "Album name", example = "name",
             requiredMode = Schema.RequiredMode.REQUIRED)
