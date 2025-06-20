@@ -73,23 +73,10 @@ public class AlbumService {
         List<PhotoResponseDto> photos = new ArrayList<>();
         for (Photo photo : photoRepository.findByAlbumId(albumId)) {
             String link = "/albums/" + album.getId() + "/photos/" + photo.getId() + "/download";
-            photos.add(
-                    PhotoResponseDto.builder()
-                            .id(photo.getId())
-                            .name(photo.getName())
-                            .description(photo.getDescription())
-                            .fileName(photo.getFileName())
-                            .downloadLink(link)
-                            .build()
-            );
+            photos.add(PhotoMapper.toDto(photo, link));
         }
 
-        return AlbumResponseDto.builder()
-                .id(album.getId())
-                .name(album.getName())
-                .description(album.getDescription())
-                .photos(photos)
-                .build();
+        return AlbumMapper.toDto(album, photos);
     }
     public AlbumResponseDto create(AlbumRequestDto albumRequestDto, String email) throws ResourceNotFoundException {
         Album album = new Album();
